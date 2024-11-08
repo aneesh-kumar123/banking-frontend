@@ -1,30 +1,44 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { handleRequest } from '../controller/handleRequest';
 import { getAllusers } from '../Service/User/user';
 import Table from '../sharedComponents/table/Table';
 
 
 const Login = () => {
-    const [userName, setUserName] = useState('');
+    const [username, setUserName] = useState('');
     const [password, setPassword] = useState('');
     const [user, setUser] = useState([]);
+    const [limit, setLimit] = useState(3);
+    const [page, setPage] = useState(1); 
+    const [totalUsers, setTotalUsers] = useState(0);
 
+    const totalPages = Math.ceil(totalUsers / limit);
+     
+    
     const fetchUsers = async () => {
         try {
-            const response = await getAllusers();
+            const response = await getAllusers(limit,page);
+           // console.log(`fetchUsers limit: ${limit} ${offset}`)
             if (response && response.data) {
                 setUser(response.data);
+                setTotalUsers(response.total); 
             }
+        
         } catch (error) {
             console.error("Error fetching users:", error);
         }
     };
 
+    useEffect(() => {
+        console.log(limit);
+        
+        fetchUsers()
+    },[limit,page])
 
     return (
         <div>
-            <form onSubmit={(e) => handleRequest(e, userName, password)}>
+            <form onSubmit={(e) => handleRequest(e, username, password)}>
                 <div className="form-group">
                     <label htmlFor="username">Username</label>
                     <input
@@ -32,7 +46,7 @@ const Login = () => {
                         className="form-control"
                         id="username"
                         placeholder="Enter username"
-                        value={userName}
+                        value={username}
                         onChange={(e) => setUserName(e.target.value)}
                     />
                 </div>
@@ -52,8 +66,9 @@ const Login = () => {
 
             <button onClick={fetchUsers} className="btn btn-info">Get Users</button>
 
+            
+            {user.length > 0 &&  <Table data={user} setLimit={setLimit} page={page} setPage={setPage} totalPages={totalPages} />}
 
-            {user.length > 0 && <Table data={user} />}
         </div>
     );
 };
